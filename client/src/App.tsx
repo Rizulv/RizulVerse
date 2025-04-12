@@ -28,7 +28,7 @@ function App() {
                   Beta
                 </span>
               </h1>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-4">
                 <a 
                   href="https://github.com/rizulv/" 
                   target="_blank" 

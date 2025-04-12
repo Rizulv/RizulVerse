@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import ChatMessage from './ChatMessage';
 import { useAppContext } from '../context/AppContext';
+import TimePortalSetup from './TimePortalSetup';
 
 type TimePersona = 'past' | 'present' | 'future';
 
