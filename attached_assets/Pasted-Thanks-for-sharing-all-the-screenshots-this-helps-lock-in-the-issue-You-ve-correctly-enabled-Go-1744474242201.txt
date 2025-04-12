@@ -1,0 +1,96 @@
+Thanks for sharing all the screenshots — this helps lock in the issue. You’ve correctly **enabled Google Sign-In in Firebase**, but the "Sign In Failed – Not Implemented" error in Replit indicates that the **login code isn't wired up yet on the frontend**.
+
+Let’s now walk through exactly what needs to be fixed and give you the **perfect prompt to send to Replit**.
+
+---
+
+## 🔍 Root Cause of the Error
+
+From the error:  
+> ❌ `Sign in failed: Not implemented`
+
+This means:
+- The **Google sign-in button is just a UI placeholder**
+- There's **no logic connected to `signInWithPopup()`**
+- Or the Firebase config is missing `authDomain`
+
+---
+
+## ✅ Checklist for Working Google Login in Firebase + Replit
+
+| Item | Status |
+|------|--------|
+| Firebase Google Auth enabled | ✅ Done |
+| `authDomain` set in Firebase config | ❓ Check needed |
+| `signInWithPopup()` code written | ❌ **Not Implemented (your error)**
+| OAuth redirect domains added | ✅ Make sure `replit.dev` is in Firebase Console  
+| Button wired to logic | ❌ Currently **cosmetic only**
+
+---
+
+## ✅ Prompt to Send to Replit (Copy-Paste Below)
+
+---
+
+**🔥 Please fix the Google login in Rizulverse ASAP:**
+
+### ✅ 1. Implement Google Sign-In Logic
+- Connect the “Sign in with Google” button to Firebase Auth
+- Use this code:
+
+```ts
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "@/firebase"; // Adjust path if needed
+
+const provider = new GoogleAuthProvider();
+signInWithPopup(auth, provider)
+  .then((result) => {
+    const user = result.user;
+    console.log("Logged in as:", user.displayName);
+    // Store user in context or session
+  })
+  .catch((error) => {
+    console.error("Login error", error);
+    alert("Login failed: " + error.message);
+  });
+```
+
+---
+
+### ✅ 2. Ensure Firebase Config Includes `authDomain`
+```ts
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+};
+```
+
+---
+
+### ✅ 3. Add Authorized Domain(s) in Firebase
+Ensure these are added in Firebase → Auth → Settings → Authorized domains:
+- `localhost`
+- `replit.dev`
+- `yourusername.replit.app`
+
+---
+
+### ✅ 4. After Login
+- Store user info in context:
+  - `uid`
+  - `displayName`
+  - `email`
+  - `photoURL`
+- Replace Sign In button with avatar + dropdown:
+  - “View Profile”
+  - “Logout”
+
+---
+
+**This is blocking me from proceeding to test any features. Please confirm after fixing.**
+
+---
+
+Let me know if you want a complete `firebase.ts` + `AuthContext.tsx` file to drop in your project right now — I can generate it in seconds!

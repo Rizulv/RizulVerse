@@ -29,25 +29,31 @@ interface AuthContextType {
   updateUserProfile: (displayName: string) => Promise<void>;
 }
 
-// Create the context with default values
-const AuthContext = createContext<AuthContextType>({
+// Create a default implementation for the context
+const defaultAuthContext: AuthContextType = {
   currentUser: null,
   userData: null,
   loading: true,
   signInWithGoogle: async () => {
-    throw new Error('Not implemented');
+    // This will be replaced by the actual implementation
+    console.error('signInWithGoogle was called outside of AuthProvider');
+    throw new Error('AuthProvider not initialized');
   },
-  logout: async () => {},
-  updateUserProfile: async () => {},
-});
-
-// Custom hook to use the auth context
-export const useAuth = () => {
-  return useContext(AuthContext);
+  logout: async () => {
+    console.error('logout was called outside of AuthProvider');
+    throw new Error('AuthProvider not initialized');
+  },
+  updateUserProfile: async () => {
+    console.error('updateUserProfile was called outside of AuthProvider');
+    throw new Error('AuthProvider not initialized');
+  },
 };
 
+// Create the context
+const AuthContext = createContext<AuthContextType>(defaultAuthContext);
+
 // Extract user data from Firebase User object
-const extractUserData = (user: User | null): UserData | null => {
+function extractUserData(user: User | null): UserData | null {
   if (!user) return null;
   
   return {
@@ -57,10 +63,10 @@ const extractUserData = (user: User | null): UserData | null => {
     photoURL: user.photoURL,
     isAnonymous: user.isAnonymous,
   };
-};
+}
 
 // Provider component
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -176,4 +182,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       {!loading && children}
     </AuthContext.Provider>
   );
-};
+}
+
+// Custom hook to use the auth context
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
