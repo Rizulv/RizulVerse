@@ -1,15 +1,15 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { 
   User, 
   signInWithPopup, 
   signOut, 
-  onAuthStateChanged,
-  updateProfile
+  onAuthStateChanged, 
+  updateProfile 
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
-// Define the shape of our authentication context
+// Define the shape of our context
 interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
@@ -18,25 +18,90 @@ interface AuthContextType {
   updateUserProfile: (displayName: string) => Promise<void>;
 }
 
-// Create the authentication context
-const AuthContext = createContext<AuthContextType | null>(null);
+// Create the context with default values
+const AuthContext = createContext<AuthContextType>({
+  currentUser: null,
+  loading: true,
+  signInWithGoogle: async () => {},
+  logout: async () => {},
+  updateUserProfile: async () => {},
+});
 
-// Hook to use the auth context
+// Custom hook to use the auth context
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return useContext(AuthContext);
 };
 
-// AuthProvider component that wraps the application and provides auth context
+// Provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Setup auth state listener when the component mounts
+  // Sign in with Google
+  const signInWithGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      toast({
+        title: "Sign in successful",
+        description: `Welcome ${result.user.displayName || 'to Rizulverse'}!`,
+      });
+    } catch (error: any) {
+      console.error('Error signing in with Google:', error);
+      toast({
+        title: "Sign in failed",
+        description: error.message || "An error occurred during sign in",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Sign out
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: "Signed out",
+        description: "You've been successfully signed out",
+      });
+    } catch (error: any) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Sign out failed",
+        description: error.message || "An error occurred during sign out",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Update user profile
+  const updateUserProfile = async (displayName: string) => {
+    try {
+      if (currentUser) {
+        await updateProfile(currentUser, { displayName });
+        // Force refresh current user state
+        setCurrentUser({ ...currentUser, displayName });
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully",
+        });
+      } else {
+        throw new Error('No user is signed in');
+      }
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Profile update failed",
+        description: error.message || "An error occurred while updating your profile",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Set up auth state observer
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -44,70 +109,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     // Cleanup subscription on unmount
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
-  // Function to sign in with Google
-  const signInWithGoogle = async () => {
-    try {
-      setLoading(true);
-      const result = await signInWithPopup(auth, googleProvider);
-      toast({
-        title: "Signed in successfully",
-        description: `Welcome ${result.user.displayName || 'to Rizulverse'}!`,
-      });
-    } catch (error: any) {
-      console.error('Google sign in error:', error);
-      toast({
-        title: "Sign in failed",
-        description: error.message || "Failed to sign in with Google. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Function to sign out
-  const logout = async () => {
-    try {
-      await signOut(auth);
-      toast({
-        title: "Signed out",
-        description: "You've been signed out successfully.",
-      });
-    } catch (error: any) {
-      console.error('Sign out error:', error);
-      toast({
-        title: "Sign out failed",
-        description: error.message || "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Function to update user profile
-  const updateUserProfile = async (displayName: string) => {
-    try {
-      if (currentUser) {
-        await updateProfile(currentUser, { displayName });
-        // Force refresh the current user to get updated profile
-        setCurrentUser({ ...currentUser });
-        toast({
-          title: "Profile updated",
-          description: "Your profile has been updated successfully.",
-        });
-      }
-    } catch (error: any) {
-      console.error('Update profile error:', error);
-      toast({
-        title: "Update failed",
-        description: error.message || "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
+  // Context value
   const value = {
     currentUser,
     loading,
