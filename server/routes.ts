@@ -20,9 +20,9 @@ class GeminiAIService {
     if (process.env.GEMINI_API_KEY) {
       this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       
-      // Create text-only model
+      // Create text-only model - using the latest model names
       this.geminiProModel = this.genAI.getGenerativeModel({
-        model: "gemini-pro",
+        model: "gemini-1.5-pro", // Updated from gemini-pro to the newer model
         safetySettings: [
           {
             category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -37,7 +37,7 @@ class GeminiAIService {
       
       // Create multimodal model for images
       this.geminiProVisionModel = this.genAI.getGenerativeModel({
-        model: "gemini-pro-vision",
+        model: "gemini-1.5-pro-vision", // Updated from gemini-pro-vision to the newer model
         safetySettings: [
           {
             category: HarmCategory.HARM_CATEGORY_HARASSMENT,

@@ -30,7 +30,7 @@ function App() {
               </h1>
               <div className="flex items-center space-x-2">
                 <a 
-                  href="https://github.com/yourusername/rizulverse" 
+                  href="https://github.com/rizulv/" 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="text-gray-300 hover:text-white transition-colors"
