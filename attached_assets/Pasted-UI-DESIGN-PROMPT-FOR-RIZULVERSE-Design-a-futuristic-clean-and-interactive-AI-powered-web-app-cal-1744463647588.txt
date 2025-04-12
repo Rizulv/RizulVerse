@@ -1,0 +1,120 @@
+UI DESIGN PROMPT FOR “RIZULVERSE”
+Design a futuristic, clean, and interactive AI-powered web app called “Rizulverse”.
+The layout should have a top navigation bar with tabs for switching between 3 immersive modules:
+
+Startup Lab – an AI business pitch validator
+
+Design Roast – an AI image critic zone
+
+Time Portal – a chat interface with "Past Me", "Present Me", and "Future Me"
+
+Use a modern dark/light theme toggle, clean layouts, soft shadows, and floating glassmorphism panels.
+
+🎨 UI Details by Section
+1. Navigation Bar (Top)
+Fixed at the top, with glowing tab indicators
+
+Tabs: Startup Lab, Design Roast, Time Portal
+
+Right side: user profile bubble, AI avatar, theme toggle
+
+2. Startup Lab Section
+A clean layout with a central input card where users can type/paste startup ideas.
+
+UI Blocks:
+
+✍️ Left: Textarea input with prompt like “Enter your startup idea...”
+
+🤖 Right: Floating AI Response card with:
+
+Market fit analysis
+
+MVP suggestions
+
+Competitor breakdown
+
+A mood emoji (🥶, 🚀, 💀 etc.)
+
+📌 Optional toggle to choose tone: “Brutally honest / Polite / VC-style”
+
+3. Design Roast Section
+Bold, edgy, and slightly sarcastic UI that roasts uploaded designs like a design jury.
+
+UI Blocks:
+
+📤 Drag-and-drop card or Upload button
+
+🧠 Right: Roast card panel with:
+
+Roast title: "Yikes, that’s a lot of gradients"
+
+Roast score (out of 10)
+
+Suggested fix bullet points
+
+🖼️ Optional side panel showing:
+
+Original image
+
+Suggested redesign preview (static)
+
+4. Time Portal Chat
+A chat interface with three personas: Past You, Present You, and Future You.
+
+UI Layout:
+
+Three color-coded chat bubbles (🔵 Present, 🔴 Past, 🟢 Future)
+
+Chat history panel on left sidebar
+
+AI Avatar floating at the bottom right
+
+Clickable icons to switch persona view (e.g., “Talk to 2020 Rizul”)
+
+Optional "emotion slider" (anxious / neutral / hopeful) that affects bot tone
+
+✨ Additional Global Design Notes
+Font Suggestion: Inter, Poppins, or Satoshi for sleek modern look
+
+Color Palette: Midnight blue, neon teal, soft gradient purples, chrome white
+
+Background: Abstract flowing lines or orbit rings subtly animated in the background (like a digital multiverse)
+
+Accent Animations: Framer Motion / GSAP on tab switch + AI response card reveal
+
+Avatar Style: Minimalist anime-style avatar with gentle blinking and hover emotes
+
+🤖 Side Elements
+🧾 Side Chat History (collapsible):
+
+Shows user’s previous startup ideas, roast results, or time chat snapshots
+
+🧠 AI Avatar Bubble (bottom right):
+
+Tooltip suggestions: “Need a prompt?”, “Wanna talk to 2018 You?”
+
+🎯 Design Prompt (Copy-Paste Friendly)
+Here’s a final compressed version you can paste directly into Galileo/Midjourney/UI AI:
+
+Design a futuristic AI dashboard web app with 3 immersive modules:
+
+“Startup Lab” – text input + AI feedback card (market, MVP, emoji rating)
+
+“Design Roast” – image upload with critique panel and roast score
+
+“Time Portal” – chat interface with three personas: Past Me, Present Me, Future Me
+Top navigation bar with tabs, user avatar, and theme toggle.
+Use dark/light toggle, glassmorphism, soft shadows, and modern sans-serif fonts.
+Include floating AI avatar, animated cards, and clean chat layout with glow indicators.
+Personality: futuristic, fun, sleek, cyber-minimalist.
+
+Would you like me to:
+
+Generate mockup wireframes or layout code for these sections?
+
+Build a base React app with tabbed routing & starter layout?
+
+Drop in GSAP/Framer animation snippets for these blocks?
+
+Let me know your starting realm again:
+Startup Lab, Design Roast, or Time Portal — and I’ll prep the code for that module.
