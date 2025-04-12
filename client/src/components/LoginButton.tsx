@@ -8,38 +8,22 @@ import {
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { signInWithPopup, GoogleAuthProvider, getAuth } from 'firebase/auth';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { auth, googleProvider } from '../lib/firebase';
 
 const LoginButton: React.FC = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { signInWithGoogle } = useAuth();
   const { toast } = useToast();
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      const result = await signInWithPopup(auth, googleProvider);
-      
-      // User successfully signed in
-      const user = result.user;
-      
-      // Show success toast
-      toast({
-        title: "Signed in successfully",
-        description: `Welcome ${user.displayName || 'to Rizulverse'}!`,
-      });
-      
-      // Close the modal
+      await signInWithGoogle();
       setIsLoginModalOpen(false);
-      
-      // Reload the page to reflect authentication status
-      window.location.reload();
     } catch (error: any) {
       console.error('Google sign in error:', error);
-      
-      // Show error toast
       toast({
         title: "Sign in failed",
         description: error.message || "Failed to sign in with Google. Please try again.",
@@ -49,59 +33,6 @@ const LoginButton: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  const handleSignOut = async () => {
-    try {
-      await auth.signOut();
-      toast({
-        title: "Signed out",
-        description: "You've been signed out successfully.",
-      });
-      
-      // Reload the page to reflect authentication status
-      window.location.reload();
-    } catch (error: any) {
-      console.error('Sign out error:', error);
-      toast({
-        title: "Sign out failed",
-        description: error.message || "Failed to sign out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const currentUser = auth.currentUser;
-
-  if (currentUser) {
-    return (
-      <div className="flex items-center space-x-2">
-        <div className="flex items-center space-x-2">
-          {currentUser.photoURL ? (
-            <img 
-              src={currentUser.photoURL} 
-              alt="Profile" 
-              className="w-8 h-8 rounded-full"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
-              {currentUser.displayName?.charAt(0) || 'U'}
-            </div>
-          )}
-          <span className="text-sm text-white hidden md:inline">
-            {currentUser.displayName || 'User'}
-          </span>
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleSignOut}
-          className="text-gray-300 border-gray-600 hover:bg-gray-700"
-        >
-          Sign Out
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <>
