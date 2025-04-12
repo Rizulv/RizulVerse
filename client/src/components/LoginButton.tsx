@@ -20,10 +20,16 @@ const LoginButton: React.FC = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+      console.log('Initiating Google sign in from LoginButton component');
+      // Use popup sign-in flow (not redirect)
       await signInWithGoogle();
+      console.log('Google sign-in successful from button');
       setIsLoginModalOpen(false);
     } catch (error: any) {
-      console.error('Google sign in error:', error);
+      console.error('Google sign in error in LoginButton:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      
       toast({
         title: "Sign in failed",
         description: error.message || "Failed to sign in with Google. Please try again.",
@@ -32,6 +38,14 @@ const LoginButton: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Direct sign in without modal
+  const handleDirectSignIn = () => {
+    setIsLoading(true);
+    handleGoogleSignIn().catch(() => {
+      setIsLoading(false);
+    });
   };
 
   return (

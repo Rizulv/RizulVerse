@@ -10,15 +10,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '../context/AuthContext';
 import LoginButton from './LoginButton';
+import { LogOut, User as UserIcon } from 'lucide-react';
 
 const UserProfile: React.FC = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, userData, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
+      console.log('Logging out user...');
       await logout();
+      console.log('Logout successful');
     } catch (error) {
       console.error('Error logging out:', error);
     } finally {
@@ -26,14 +29,16 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  // If no user is logged in, show the login button
   if (!currentUser) {
     return <LoginButton />;
   }
 
+  // User is logged in, display profile dropdown
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center space-x-2 focus:outline-none">
+        <button className="flex items-center space-x-2 focus:outline-none hover:opacity-80 transition-opacity">
           {currentUser.photoURL ? (
             <img 
               src={currentUser.photoURL} 
@@ -50,7 +55,7 @@ const UserProfile: React.FC = () => {
           </span>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 bg-gray-800 border-gray-700 text-gray-100">
+      <DropdownMenuContent align="end" className="w-64 bg-gray-800 border-gray-700 text-gray-100">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{currentUser.displayName || 'User'}</p>
@@ -58,18 +63,30 @@ const UserProfile: React.FC = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-gray-700" />
+        
         <DropdownMenuItem 
-          className="cursor-pointer hover:bg-gray-700"
+          className="cursor-pointer hover:bg-gray-700 flex items-center gap-2"
+          onClick={() => {}} // Will implement profile view in future
+        >
+          <UserIcon size={16} />
+          <span>View Profile</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          className="cursor-pointer hover:bg-gray-700 text-red-400 flex items-center gap-2"
           onClick={handleLogout}
           disabled={isLoggingOut}
         >
           {isLoggingOut ? (
-            <span className="flex items-center">
-              <span className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent mr-2"></span>
-              Logging out...
-            </span>
+            <>
+              <span className="animate-spin h-4 w-4 border-2 border-red-400 rounded-full border-t-transparent mr-2"></span>
+              <span>Logging out...</span>
+            </>
           ) : (
-            <span>Sign Out</span>
+            <>
+              <LogOut size={16} />
+              <span>Sign Out</span>
+            </>
           )}
         </DropdownMenuItem>
       </DropdownMenuContent>
