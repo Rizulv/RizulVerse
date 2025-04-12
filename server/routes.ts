@@ -1,12 +1,112 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { GoogleGenerativeAI, GenerativeModel, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
-// Gemini API would be implemented here in a real application
-// This is a simulated implementation using hardcoded responses
+// Initialize Gemini API
+if (!process.env.GEMINI_API_KEY) {
+  console.warn("GEMINI_API_KEY not set. Using simulation mode for AI responses.");
+}
+
+// Real Gemini AI Service that uses the Google Generative AI
 class GeminiAIService {
+  private genAI: GoogleGenerativeAI | null = null;
+  private geminiProModel: GenerativeModel | null = null;
+  private geminiProVisionModel: GenerativeModel | null = null;
+  private simulationMode: boolean = false;
+
+  constructor() {
+    // Initialize the Gemini API if the key is available
+    if (process.env.GEMINI_API_KEY) {
+      this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      
+      // Create text-only model
+      this.geminiProModel = this.genAI.getGenerativeModel({
+        model: "gemini-pro",
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+        ],
+      });
+      
+      // Create multimodal model for images
+      this.geminiProVisionModel = this.genAI.getGenerativeModel({
+        model: "gemini-pro-vision",
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+        ],
+      });
+    } else {
+      // If no API key, use simulation mode
+      this.simulationMode = true;
+      console.warn("Running in simulation mode - no real AI responses will be generated");
+    }
+  }
+
   async generateStartupAnalysis(idea: string) {
-    // Simulate Gemini API call response
+    if (this.simulationMode || !this.geminiProModel) {
+      return this.simulateStartupAnalysis(idea);
+    }
+    
+    try {
+      // Construct a prompt for the startup analysis
+      const prompt = `
+        As an AI startup analyst, evaluate this business idea in detail.
+        Idea: "${idea}"
+        
+        Provide a response in the following JSON format:
+        {
+          "analysis": "Your detailed analysis of the idea and its potential (2-3 sentences)",
+          "marketFit": "A number from 1-100 representing the market fit potential",
+          "techStack": ["3-5 technologies that would be suitable for implementing this idea"],
+          "competitors": ["3-5 existing competitors or similar products"],
+          "emoji": "A single emoji that represents your overall sentiment about this idea"
+        }
+        
+        Make the response realistic, insightful and constructive. Provide only the JSON with no additional text.
+      `;
+
+      const result = await this.geminiProModel.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
+      
+      // Extract the JSON from the response
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const jsonStr = jsonMatch[0];
+        const analysis = JSON.parse(jsonStr);
+        
+        // Ensure marketFit is a number
+        if (typeof analysis.marketFit === 'string') {
+          analysis.marketFit = parseInt(analysis.marketFit);
+        }
+        
+        return analysis;
+      } else {
+        console.error("Failed to parse JSON from Gemini response:", text);
+        return this.simulateStartupAnalysis(idea);
+      }
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+      return this.simulateStartupAnalysis(idea);
+    }
+  }
+
+  private simulateStartupAnalysis(idea: string) {
+    // Fallback simulation when API is unavailable
     return {
       analysis: `Developing an AI-driven ${idea.toLowerCase().includes('assistant') ? 'personal shopping assistant' : 'product'} has potential, but the market is competitive. Focus on creating a unique value proposition to stand out.`,
       marketFit: Math.floor(Math.random() * 30) + 50, // Random score between 50-80
@@ -24,8 +124,67 @@ class GeminiAIService {
     };
   }
 
-  async analyzeDesign() {
-    // Simulate Gemini Vision API for image analysis
+  async analyzeDesign(imageBase64?: string) {
+    if (this.simulationMode || !this.geminiProVisionModel || !imageBase64) {
+      return this.simulateDesignAnalysis();
+    }
+    
+    try {
+      // Create the parts with the image for multimodal input
+      const parts = [
+        {
+          text: `
+            You are an expert UI/UX design critic. Analyze this design image and provide detailed feedback.
+            Return your response in the following JSON format:
+            {
+              "title": "A catchy, sometimes humorous title that summarizes your critique",
+              "score": "A number from 1-10 representing the overall design quality",
+              "feedback": [
+                {"type": "positive", "text": "Something good about the design"},
+                {"type": "negative", "text": "A critical point that needs improvement"},
+                {"type": "warning", "text": "A cautionary point about potential issues"}
+              ],
+              "suggestedFix": "A brief paragraph suggesting how to improve the design"
+            }
+            Provide only the JSON with no additional text.
+          `
+        },
+        {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: imageBase64
+          }
+        }
+      ];
+      
+      const result = await this.geminiProVisionModel.generateContent(parts);
+      const response = result.response;
+      const text = response.text();
+      
+      // Extract the JSON from the response
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const jsonStr = jsonMatch[0];
+        const analysis = JSON.parse(jsonStr);
+        
+        // Ensure score is a number
+        if (typeof analysis.score === 'string') {
+          analysis.score = parseInt(analysis.score);
+        }
+        
+        return analysis;
+      } else {
+        console.error("Failed to parse JSON from Gemini response:", text);
+        return this.simulateDesignAnalysis();
+      }
+    } catch (error) {
+      console.error("Error calling Gemini Vision API:", error);
+      return this.simulateDesignAnalysis();
+    }
+  }
+
+  private simulateDesignAnalysis() {
+    // Fallback simulation when API is unavailable
     const feedbackOptions = [
       { type: 'negative', text: 'Try a more subtle color palette' },
       { type: 'warning', text: 'The typography hierarchy needs work - too many competing font styles' },
@@ -48,7 +207,39 @@ class GeminiAIService {
   }
 
   async getPersonaResponse(message: string, persona: string) {
-    // Simulate different persona responses
+    if (this.simulationMode || !this.geminiProModel) {
+      return this.simulatePersonaResponse(persona);
+    }
+    
+    try {
+      // Construct a prompt for the time-portal persona
+      const personaDescriptions = {
+        past: "You are my past self from 5 years ago, when I was just starting out in my career. You're optimistic but inexperienced. You offer advice from a younger perspective, often with enthusiasm but limited by less experience.",
+        present: "You are my present self. You offer balanced, practical advice based on my current situation. You are thoughtful and pragmatic, focusing on immediate actions I can take.",
+        future: "You are my future self from 5 years in the future. You've gained wisdom and perspective. You offer advice based on what you know 'will happen' and what choices turned out to be important."
+      };
+      
+      const selectedPersona = personaDescriptions[persona as keyof typeof personaDescriptions] || personaDescriptions.present;
+      
+      const prompt = `
+        ${selectedPersona}
+        
+        My message to you: "${message}"
+        
+        Provide a thoughtful response from this persona's perspective. Keep your response under 150 words, conversational, and focused on providing perspective and advice that matches how this time-based version of me would respond.
+      `;
+
+      const result = await this.geminiProModel.generateContent(prompt);
+      const response = result.response;
+      return response.text();
+    } catch (error) {
+      console.error("Error calling Gemini API for persona:", error);
+      return this.simulatePersonaResponse(persona);
+    }
+  }
+
+  private simulatePersonaResponse(persona: string) {
+    // Fallback simulation when API is unavailable
     const responses = {
       past: [
         "Remember when you were just starting out and full of hope? Those days were filled with excitement but also uncertainty. Don't worry, your path gets clearer.",
@@ -93,6 +284,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate analysis using the Gemini service
       const analysis = await geminiService.generateStartupAnalysis(idea);
+      
+      // Store in database if there's a user (for now, just return directly)
+      // In a real app with auth, we would associate with the current user
+      // const savedAnalysis = await storage.createStartupAnalysis({
+      //   userId: req.user?.id,
+      //   idea,
+      //   ...analysis
+      // });
+      
       res.json(analysis);
     } catch (error) {
       console.error('Error analyzing startup idea:', error);
@@ -103,9 +303,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Design Roast API endpoint
   app.post('/api/design/roast', async (req: Request, res: Response) => {
     try {
-      // In a real implementation, this would process an uploaded image
-      // and send it to Gemini Vision API
-      const roast = await geminiService.analyzeDesign();
+      // Get the image data from the request
+      const { imageData } = req.body; // Base64 encoded image
+      
+      // In a real implementation with auth, we would save the image to storage
+      // then call the Gemini Vision API with the image URL
+      const roast = await geminiService.analyzeDesign(imageData);
+      
+      // Store in database (not implementing here for simplicity)
+      // const savedRoast = await storage.createDesignRoast({
+      //   userId: req.user?.id,
+      //   imageUrl: savedImageUrl, // We'd save the image first
+      //   ...roast
+      // });
+      
       res.json(roast);
     } catch (error) {
       console.error('Error roasting design:', error);
@@ -128,6 +339,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get response from the appropriate persona
       const response = await geminiService.getPersonaResponse(message, persona);
+      
+      // Store in database in a real app with auth
+      // const savedMessage = await storage.createChatMessage({
+      //   userId: req.user?.id,
+      //   sender: persona,
+      //   message: response
+      // });
+      
       res.json({ response });
     } catch (error) {
       console.error('Error generating persona response:', error);
