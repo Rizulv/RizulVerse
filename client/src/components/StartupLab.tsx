@@ -17,14 +17,14 @@ const StartupLab = () => {
     
     try {
       // Make actual API call to backend
-      const response = await apiRequest({
+      const response = await apiRequest<StartupAnalysisType>({
         url: '/api/startup/analyze',
         method: 'POST',
         data: { idea: startupIdea }
       });
       
-      // Type assertion to ensure the response matches our expected type
-      setStartupAnalysis(response as StartupAnalysisType);
+      // Set the analysis in the app context
+      setStartupAnalysis(response);
     } catch (err) {
       console.error('Failed to analyze startup idea:', err);
       setError('Failed to analyze your startup idea. Please try again.');
