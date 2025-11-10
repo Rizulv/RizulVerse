@@ -1,79 +1,78 @@
-import { 
-  users, type User, type InsertUser,
-  startupAnalyses, type StartupAnalysis, type InsertStartupAnalysis,
-  designRoasts, type DesignRoast, type InsertDesignRoast,
-  chatMessages, type ChatMessage, type InsertChatMessage
-} from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
+// server/storage.ts
+import { db } from './firebase-admin';
+import {
+  User,
+  StartupAnalysis,
+  DesignRoast,
+  ChatMessage,
+} from '@shared/schema';
 
-export interface IStorage {
-  // User operations
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  
-  // Startup Analysis operations
-  getStartupAnalysis(id: number): Promise<StartupAnalysis | undefined>;
-  createStartupAnalysis(analysis: InsertStartupAnalysis): Promise<StartupAnalysis>;
-  
-  // Design Roast operations
-  getDesignRoast(id: number): Promise<DesignRoast | undefined>;
-  createDesignRoast(roast: InsertDesignRoast): Promise<DesignRoast>;
-  
-  // Chat Message operations
-  getChatMessages(userId: number): Promise<ChatMessage[]>;
-  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
-}
+export const storage = {
+  // -------------------------
+  // USERS
+  // -------------------------
+  async getUser(uid: string): Promise<User | undefined> {
+    const doc = await db.collection('users').doc(uid).get();
+    return doc.exists ? (doc.data() as User) : undefined;
+  },
 
-export class DatabaseStorage implements IStorage {
-  // User operations
-  async getUser(id: number): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id));
-    return result[0];
-  }
+  async createUser(user: User): Promise<void> {
+    await db.collection('users').doc(user.uid).set({
+      ...user,
+      createdAt: new Date(),
+    });
+  },
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.username, username));
-    return result[0];
-  }
+  // -------------------------
+  // STARTUP ANALYSIS
+  // -------------------------
+  async getStartupAnalysis(id: string): Promise<StartupAnalysis | undefined> {
+    const doc = await db.collection('startupAnalyses').doc(id).get();
+    return doc.exists ? (doc.data() as StartupAnalysis) : undefined;
+  },
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(insertUser).returning();
-    return result[0];
-  }
-  
-  // Startup Analysis operations
-  async getStartupAnalysis(id: number): Promise<StartupAnalysis | undefined> {
-    const result = await db.select().from(startupAnalyses).where(eq(startupAnalyses.id, id));
-    return result[0];
-  }
-  
-  async createStartupAnalysis(analysis: InsertStartupAnalysis): Promise<StartupAnalysis> {
-    const result = await db.insert(startupAnalyses).values(analysis).returning();
-    return result[0];
-  }
-  
-  // Design Roast operations
-  async getDesignRoast(id: number): Promise<DesignRoast | undefined> {
-    const result = await db.select().from(designRoasts).where(eq(designRoasts.id, id));
-    return result[0];
-  }
-  
-  async createDesignRoast(roast: InsertDesignRoast): Promise<DesignRoast> {
-    const result = await db.insert(designRoasts).values(roast).returning();
-    return result[0];
-  }
-  
-  // Chat Message operations
-  async getChatMessages(userId: number): Promise<ChatMessage[]> {
-    return db.select().from(chatMessages).where(eq(chatMessages.userId, userId));
-  }
-  
-  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
-    const result = await db.insert(chatMessages).values(message).returning();
-    return result[0];
-  }
-}
+  async createStartupAnalysis(analysis: Omit<StartupAnalysis, 'id'>): Promise<string> {
+    const docRef = await db.collection('startupAnalyses').add({
+      ...analysis,
+      createdAt: new Date(),
+    });
+    return docRef.id;
+  },
 
-export const storage = new DatabaseStorage();
+  // -------------------------
+  // DESIGN ROAST
+  // -------------------------
+  async getDesignRoast(id: string): Promise<DesignRoast | undefined> {
+    const doc = await db.collection('designRoasts').doc(id).get();
+    return doc.exists ? (doc.data() as DesignRoast) : undefined;
+  },
+
+  async createDesignRoast(roast: Omit<DesignRoast, 'id'>): Promise<string> {
+    const docRef = await db.collection('designRoasts').add({
+      ...roast,
+      createdAt: new Date(),
+    });
+    return docRef.id;
+  },
+
+  // -------------------------
+  // CHAT MESSAGES
+  // -------------------------
+  async getChatMessages(userId: string): Promise<ChatMessage[]> {
+    const snapshot = await db
+      .collection('chatMessages')
+      .where('userId', '==', userId)
+      .orderBy('timestamp', 'asc')
+      .get();
+
+    return snapshot.docs.map((doc) => doc.data() as ChatMessage);
+  },
+
+  async createChatMessage(message: Omit<ChatMessage, 'id'>): Promise<string> {
+    const docRef = await db.collection('chatMessages').add({
+      ...message,
+      timestamp: new Date(),
+    });
+    return docRef.id;
+  },
+};

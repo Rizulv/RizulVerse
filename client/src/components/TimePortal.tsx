@@ -1,6 +1,7 @@
+// src/components/TimePortal.tsx
 import { useState, useRef, useEffect } from 'react';
 import ChatMessage from './ChatMessage';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '@/context/AppContext';
 import TimePortalSetup from './TimePortalSetup';
 
 type TimePersona = 'past' | 'present' | 'future';
@@ -98,7 +99,6 @@ const TimePortal = () => {
             {chatMessages.map((msg) => (
               <ChatMessage key={msg.id} message={msg} />
             ))}
-            
             {isTyping && (
               <div className="flex flex-col max-w-[85%]">
                 <div className="flex items-center space-x-2 mb-1">
@@ -123,7 +123,6 @@ const TimePortal = () => {
                 </div>
               </div>
             )}
-            
             <div ref={messagesEndRef} />
           </div>
           

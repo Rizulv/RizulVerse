@@ -1,11 +1,9 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { initialChatMessages } from '../lib/mockData';
-
-export type ChatMessageSender = 'user' | 'past' | 'present' | 'future';
+// src/context/AppContext.tsx
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface ChatMessageType {
   id: string;
-  sender: ChatMessageSender;
+  sender: 'user' | 'past' | 'present' | 'future';
   text: string;
   timestamp: Date;
 }
@@ -24,10 +22,12 @@ export interface DesignRoastFeedbackItem {
 }
 
 export interface DesignRoastType {
+  id: string;
   title: string;
   score: number;
   feedback: DesignRoastFeedbackItem[];
   suggestedFix: string;
+  imagePreview: string;
 }
 
 export interface UploadedImageType {
@@ -35,56 +35,68 @@ export interface UploadedImageType {
   preview: string;
 }
 
-interface AppContextType {
-  // Chat messages
+// Full context shape
+export interface AppContextType {
+  // Chat
   chatMessages: ChatMessageType[];
-  addChatMessage: (message: ChatMessageType) => void;
-  
-  // Startup analysis
+  addChatMessage: (msg: ChatMessageType) => void;
+
+  // Startup
   startupAnalysis: StartupAnalysisType | null;
   setStartupAnalysis: (analysis: StartupAnalysisType | null) => void;
-  
-  // Design roast
+
+  // Design Roast
   designRoast: DesignRoastType | null;
   setDesignRoast: (roast: DesignRoastType | null) => void;
-  
-  // Uploaded image
+  roastHistory: DesignRoastType[];
+  addToRoastHistory: (roast: DesignRoastType) => void;
+
+  // Image upload
   uploadedImage: UploadedImageType | null;
-  setUploadedImage: (image: UploadedImageType | null) => void;
+  setUploadedImage: (img: UploadedImageType | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [chatMessages, setChatMessages] = useState<ChatMessageType[]>(initialChatMessages);
+  // Chat state
+  const [chatMessages, setChatMessages] = useState<ChatMessageType[]>([]);
+  const addChatMessage = (msg: ChatMessageType) => setChatMessages((prev) => [...prev, msg]);
+
+  // Startup state
   const [startupAnalysis, setStartupAnalysis] = useState<StartupAnalysisType | null>(null);
+
+  // Design Roast state
   const [designRoast, setDesignRoast] = useState<DesignRoastType | null>(null);
+  const [roastHistory, setRoastHistory] = useState<DesignRoastType[]>([]);
+  const addToRoastHistory = (roast: DesignRoastType) =>
+    setRoastHistory((prev) => [roast, ...prev]);
+
+  // Upload state
   const [uploadedImage, setUploadedImage] = useState<UploadedImageType | null>(null);
-  
-  const addChatMessage = (message: ChatMessageType) => {
-    setChatMessages(prev => [...prev, message]);
-  };
-  
+
   return (
-    <AppContext.Provider value={{
-      chatMessages,
-      addChatMessage,
-      startupAnalysis,
-      setStartupAnalysis,
-      designRoast,
-      setDesignRoast,
-      uploadedImage,
-      setUploadedImage
-    }}>
+    <AppContext.Provider
+      value={{
+        chatMessages,
+        addChatMessage,
+        startupAnalysis,
+        setStartupAnalysis,
+        designRoast,
+        setDesignRoast,
+        roastHistory,
+        addToRoastHistory,
+        uploadedImage,
+        setUploadedImage,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );
 };
 
-export const useAppContext = () => {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useAppContext must be used within an AppProvider');
-  }
-  return context;
+export const useAppContext = (): AppContextType => {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error('useAppContext must be used within AppProvider');
+  return ctx;
 };

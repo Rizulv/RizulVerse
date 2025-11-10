@@ -1,7 +1,7 @@
 import React, { ReactNode, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import LoginButton from './LoginButton';
 import { LockIcon, ShieldIcon } from 'lucide-react';
 

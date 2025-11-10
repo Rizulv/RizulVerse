@@ -1,3 +1,4 @@
+console.log("✅ AuthContext.tsx loaded");
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { 
   User, 
@@ -67,6 +68,7 @@ function extractUserData(user: User | null): UserData | null {
 
 // Provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
+  console.log("✅ AuthProvider rendered");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -179,13 +181,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={value}>
       {/* Only render children when authentication is done initializing */}
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
 
 // Custom hook to use the auth context
 export function useAuth() {
+  console.log("✅ useAuth() hook called");
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
